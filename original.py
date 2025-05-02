@@ -1,4 +1,5 @@
-# -------------------- Import Libraries --------------------
+# -------------------- Import Required Libraries --------------------
+# These libraries help with text processing, visualization, and data analysis.
 import nltk
 from collections import Counter
 import pandas as pd
@@ -8,67 +9,47 @@ from anytree import Node, RenderTree
 import string
 
 # -------------------- Download NLTK Resources --------------------
-nltk.download('punkt')  # Tokenizer
-nltk.download('stopwords')  # Stopwords for filtering
-nltk.download('averaged_perceptron_tagger')  # POS tagger
+# These are necessary tools from the NLTK library for tokenization, stopword filtering, and part-of-speech tagging.
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 
 # -------------------- Load and Save Corpus --------------------
+# I am combining two text files from the NLTK ABC corpus: one on rural topics and one on science.
+# I save this combined text into a single file for reference or reuse.
 corpus = nltk.corpus.abc.raw(['rural.txt', 'science.txt'])
-
-# Save the combined corpus to a text file
 with open("ScienceRule.txt", "w", encoding="utf-8") as file:
     file.write(corpus)
 
-
 # -------------------- Text Preprocessing Function --------------------
 def preprocess_text(text):
-     """
-    Cleans and tokenizes the raw input text by:
-    - Splitting it into words
-    - Lowercasing all words
-    - Removing punctuation and stopwords
-    - Keeping only alphabetic words
-
-    This step prepares the text for further analysis by reducing noise.
-
-    Args:
-        text (str): The raw combined text from rural and science articles.
-
-    Returns:
-        list: A list of clean, lowercase, meaningful words.
+    """
+    This function prepares the raw text for analysis by:
+    - Tokenizing the text into words.
+    - Converting all words to lowercase for uniformity.
+    - Removing punctuation and non-alphabetic characters.
+    - Removing English stopwords (e.g., 'the', 'and', 'is') to keep only meaningful words.
+    
+    This process ensures that we focus only on relevant words for frequency analysis and POS tagging.
     """
     tokens = nltk.word_tokenize(text)
     tokens = [word.lower() for word in tokens if word.isalpha()]
     stop_words = set(nltk.corpus.stopwords.words('english'))
     return [word for word in tokens if word not in stop_words]
 
-# -------------------- Analyze Word Frequency --------------------
+# -------------------- Word Frequency Analysis Function --------------------
 def analyze_text(tokens):
     """
-    Counts how often each word appears in the tokenized corpus.
-
-    Helps identify the most frequently discussed topics.
-
-    Args:
-        tokens (list): Preprocessed list of tokens.
-
-    Returns:
-        Counter: Dictionary-like object with word counts.
+    This function counts how many times each word appears in the text using a Counter.
+    The result helps identify the most common or important terms in the document.
     """
     return Counter(tokens)
 
-# -------------------- POS Tagging --------------------
+# -------------------- POS Tagging Function --------------------
 def pos_tagging(tokens):
-     """
-    Assigns a part-of-speech (POS) tag to each word such as noun, verb, adjective.
-
-    Useful for deeper grammatical or semantic analysis.
-
-    Args:
-        tokens (list): Preprocessed word tokens.
-
-    Returns:
-        list: List of tuples where each tuple is (word, POS tag).
+    """
+    This function assigns a part-of-speech (POS) tag to each word (e.g., noun, verb, adjective).
+    POS tagging helps us understand the grammatical role of each word and perform deeper linguistic analysis.
     """
     return nltk.pos_tag(tokens)
 
@@ -77,15 +58,14 @@ tokens = preprocess_text(corpus)
 frequency = analyze_text(tokens)
 pos_tags = pos_tagging(tokens)
 
-# -------------------- Display Top 20 Word Frequencies --------------------
+# -------------------- Display Top 20 Most Frequent Words --------------------
 print("\n🔠 Top 20 Most Common Words:")
 for word, count in frequency.most_common(20):
     print(f"{word}: {count}")
 
-# -------------------- Create DataFrame --------------------
+# -------------------- Create DataFrame from Frequency Data --------------------
+# This DataFrame helps structure the top 20 words with their frequency and grammatical roles (POS).
 df = pd.DataFrame(frequency.most_common(20), columns=['Word', 'Frequency'])
-
-# Map POS tags to top words
 pos_dict = dict(pos_tags)
 df['POS'] = df['Word'].map(pos_dict)
 df = df.sort_values('Frequency', ascending=False)
@@ -93,22 +73,27 @@ df = df.sort_values('Frequency', ascending=False)
 print("\n📊 Word Frequency and POS DataFrame:")
 print(df)
 
-# -------------------- Tree Visualization --------------------
+# -------------------- Build Tree View for Word Groups --------------------
+# Here I use the 'anytree' library to create a tree structure of words grouped by POS.
+# It shows the hierarchy: Root -> POS category -> individual words with frequency.
 grouped = df.groupby('POS')
 root = Node("Word Frequency Tree")
 
-# Build tree structure
 for pos, group in grouped:
     pos_node = Node(pos, parent=root)
     for _, row in group.iterrows():
         Node(f"{row['Word']} ({row['Frequency']})", parent=pos_node)
 
-# Display tree
 print("\n🌳 Word Frequency Tree Structure:")
 for pre, fill, node in RenderTree(root):
     print(f"{pre}{node.name}")
 
-# -------------------- Visualizations --------------------
+# -------------------- Visualizing Word Frequencies --------------------
+# I use different types of charts to visualize the top 20 most frequent words:
+# - Bar chart
+# - Line chart
+# - Word cloud
+# - Horizontal bar chart
 plt.figure(figsize=(15, 10))
 
 # Bar Chart
@@ -145,14 +130,15 @@ plt.ylabel('Words')
 plt.tight_layout()
 plt.show()
 
-# -------------------- Save Data --------------------
-df.to_csv('word_frequencies_with_pos.csv', index=False)
+# -------------------- Save Word Frequency Data --------------------
+# Save the top 20 words with POS tags to a CSV file.
+df.to_csv('word_freq_with_pos.csv', index=False)
 
-# -------------------- Noun and Verb Analysis --------------------
+# -------------------- Analyze Nouns and Verbs --------------------
+# I separate the top nouns and verbs using POS tags to understand the types of words used.
 noun_tags = {'NN', 'NNS', 'NNP', 'NNPS'}
 verb_tags = {'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'}
 
-# Extract top nouns and verbs
 nouns = [word for word, tag in pos_tags if tag in noun_tags]
 verbs = [word for word, tag in pos_tags if tag in verb_tags]
 
@@ -165,28 +151,29 @@ print(df_nouns)
 print("\n🔤 Top 10 Verbs:")
 print(df_verbs)
 
-# Save to CSV
+# Save nouns and verbs into separate CSV files for further analysis
 df_nouns.to_csv("top_10_nouns.csv", index=False)
 df_verbs.to_csv("top_10_verbs.csv", index=False)
 
-# -------------------- POS Subplots --------------------
+# -------------------- Visualize Nouns and Verbs --------------------
+# Two bar charts for comparing the top 10 nouns and verbs in the text.
 fig, axes = plt.subplots(1, 2, figsize=(16, 6))
 
-# Verbs Plot
+# Verbs Bar Chart
 axes[0].bar(df_verbs['Verb'], df_verbs['Frequency'], color='orange')
 axes[0].set_title('Top 10 Verbs')
 axes[0].set_xlabel('Verb')
 axes[0].set_ylabel('Frequency')
 axes[0].tick_params(axis='x', rotation=45)
 
-# Nouns Plot
+# Nouns Bar Chart
 axes[1].bar(df_nouns['Noun'], df_nouns['Frequency'], color='green')
 axes[1].set_title('Top 10 Nouns')
 axes[1].set_xlabel('Noun')
 axes[1].set_ylabel('Frequency')
 axes[1].tick_params(axis='x', rotation=45)
 
-plt.suptitle('Parts of Speech Frequency Comparison', fontsize=16, fontweight='bold')
+# Overall title and layout
+plt.suptitle('POS Frequency Comparison', fontsize=16, fontweight='bold')
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
-
