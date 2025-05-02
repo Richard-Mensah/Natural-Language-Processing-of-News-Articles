@@ -19,16 +19,23 @@ corpus = nltk.corpus.abc.raw(['rural.txt', 'science.txt'])
 with open("ScienceRule.txt", "w", encoding="utf-8") as file:
     file.write(corpus)
 
+
 # -------------------- Text Preprocessing Function --------------------
 def preprocess_text(text):
-    """
-    Tokenizes, lowers, and removes stopwords and non-alphabetic tokens from the input text.
-    
+     """
+    Cleans and tokenizes the raw input text by:
+    - Splitting it into words
+    - Lowercasing all words
+    - Removing punctuation and stopwords
+    - Keeping only alphabetic words
+
+    This step prepares the text for further analysis by reducing noise.
+
     Args:
-        text (str): Raw text to preprocess.
+        text (str): The raw combined text from rural and science articles.
 
     Returns:
-        list: A list of cleaned tokens.
+        list: A list of clean, lowercase, meaningful words.
     """
     tokens = nltk.word_tokenize(text)
     tokens = [word.lower() for word in tokens if word.isalpha()]
@@ -38,26 +45,30 @@ def preprocess_text(text):
 # -------------------- Analyze Word Frequency --------------------
 def analyze_text(tokens):
     """
-    Analyzes word frequency from a list of tokens.
+    Counts how often each word appears in the tokenized corpus.
+
+    Helps identify the most frequently discussed topics.
 
     Args:
-        tokens (list): Preprocessed tokens.
+        tokens (list): Preprocessed list of tokens.
 
     Returns:
-        Counter: Dictionary-like object with word frequencies.
+        Counter: Dictionary-like object with word counts.
     """
     return Counter(tokens)
 
 # -------------------- POS Tagging --------------------
 def pos_tagging(tokens):
-    """
-    Tags each word with its part of speech (POS).
+     """
+    Assigns a part-of-speech (POS) tag to each word such as noun, verb, adjective.
+
+    Useful for deeper grammatical or semantic analysis.
 
     Args:
-        tokens (list): Preprocessed tokens.
+        tokens (list): Preprocessed word tokens.
 
     Returns:
-        list: List of tuples (word, POS tag).
+        list: List of tuples where each tuple is (word, POS tag).
     """
     return nltk.pos_tag(tokens)
 
@@ -178,3 +189,4 @@ axes[1].tick_params(axis='x', rotation=45)
 plt.suptitle('Parts of Speech Frequency Comparison', fontsize=16, fontweight='bold')
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 plt.show()
+
